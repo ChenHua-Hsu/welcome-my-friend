@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where shall we go? · Saint-Genis Trip Picker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <div class="lang-toggle">
+    <button data-lang="zh" class="active">中文</button>
+    <button data-lang="en">English</button>
+  </div>
+  <h1 data-i18n="title">嗨 ✨ 歡迎來 Saint-Genis</h1>
+  <p class="subtitle" data-i18n="subtitle">挑幾個你想去的地方，我來安排</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="day" data-i18n="tabDay">🌅 當天來回</button>
+  <button class="tab" data-tab="overnight" data-i18n="tabOvernight">🌙 過夜行程</button>
+  <button class="tab" data-tab="picks" data-i18n="tabPicks">💌 我的清單 <span id="pickCount" class="count">0</span></button>
+</nav>
+
+<main>
+  <section id="day-section" class="cards"></section>
+  <section id="overnight-section" class="cards hidden"></section>
+  <section id="picks-section" class="picks hidden">
+    <h2 data-i18n="picksTitle">你選的地方</h2>
+    <div id="picks-list"></div>
+    <p id="picks-empty" data-i18n="picksEmpty">還沒選任何地方，去逛逛吧～</p>
+  </section>
+</main>
+
+<footer>
+  <p data-i18n="footer">用愛 + GitHub Pages 製作 ♡</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
