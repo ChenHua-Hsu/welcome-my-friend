@@ -27,8 +27,20 @@
   <section id="overnight-section" class="cards hidden"></section>
   <section id="picks-section" class="picks hidden">
     <h2 data-i18n="picksTitle">你選的地方</h2>
+    <div id="from-friend-banner" class="from-friend hidden"></div>
     <div id="picks-list"></div>
     <p id="picks-empty" data-i18n="picksEmpty">還沒選任何地方，去逛逛吧～</p>
+    <div id="send-box" class="send-box hidden">
+      <h3 data-i18n="sendTitle">把選擇送給 Ken</h3>
+      <p class="send-hint" data-i18n="sendHint">選好後挑一個方式傳給我</p>
+      <div class="send-buttons">
+        <button id="btn-copy"  data-i18n="btnCopy">📋 複製文字</button>
+        <button id="btn-link"  data-i18n="btnLink">🔗 複製分享連結</button>
+        <button id="btn-email" data-i18n="btnEmail">✉️ 用 Email 寄</button>
+        <button id="btn-wa"    data-i18n="btnWa">💬 用 WhatsApp 傳</button>
+      </div>
+      <p id="send-toast" class="toast"></p>
+    </div>
   </section>
 </main>
 

@@ -1,5 +1,8 @@
 let lang = 'zh';
 const picks = new Set();
+const YOUR_EMAIL = 'ken91021615@gmail.com';
+const YOUR_WHATSAPP = ''; // set to E.164 number without + e.g. "33612345678", or leave '' to hide
+let fromFriendMode = false;
 
 const t = (obj) => (obj && obj[lang]) || (obj && obj.zh) || '';
 
@@ -45,14 +48,22 @@ function renderCard(spot, isOvernight) {
 function renderPicks() {
   const list = document.getElementById('picks-list');
   const empty = document.getElementById('picks-empty');
+  const sendBox = document.getElementById('send-box');
+  const banner = document.getElementById('from-friend-banner');
   list.innerHTML = '';
   const all = [...DAY_SPOTS, ...OVERNIGHT_SPOTS];
   const chosen = all.filter(s => picks.has(s.id));
+
+  banner.classList.toggle('hidden', !fromFriendMode);
+  if (fromFriendMode) banner.textContent = t(UI.fromFriendBanner);
+
   if (chosen.length === 0) {
     empty.classList.remove('hidden');
+    sendBox.classList.add('hidden');
     return;
   }
   empty.classList.add('hidden');
+  sendBox.classList.toggle('hidden', fromFriendMode);
   chosen.forEach(spot => {
     const div = document.createElement('div');
     div.className = 'pick-item';
@@ -62,6 +73,84 @@ function renderPicks() {
     div.innerHTML = `<h4>${t(spot.name)}</h4><small>${type}</small>`;
     list.appendChild(div);
   });
+}
+
+function buildSummaryText() {
+  const all = [...DAY_SPOTS, ...OVERNIGHT_SPOTS];
+  const day = DAY_SPOTS.filter(s => picks.has(s.id));
+  const over = OVERNIGHT_SPOTS.filter(s => picks.has(s.id));
+  const lines = [];
+  lines.push(lang === 'zh' ? '我選的地方：' : 'My picks:');
+  if (day.length) {
+    lines.push('');
+    lines.push(lang === 'zh' ? '🌅 當天來回' : '🌅 Day trips');
+    day.forEach(s => lines.push('  - ' + t(s.name)));
+  }
+  if (over.length) {
+    lines.push('');
+    lines.push(lang === 'zh' ? '🌙 過夜' : '🌙 Overnight');
+    over.forEach(s => lines.push('  - ' + t(s.name)));
+  }
+  return lines.join('\n');
+}
+
+function buildShareLink() {
+  const ids = [...picks].join(',');
+  const url = new URL(window.location.href);
+  url.searchParams.set('picks', ids);
+  url.searchParams.set('lang', lang);
+  return url.toString();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('send-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return true;
+  }
+}
+
+function setupShareButtons() {
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    await copyToClipboard(buildSummaryText());
+    showToast(t(UI.copied));
+  });
+  document.getElementById('btn-link').addEventListener('click', async () => {
+    await copyToClipboard(buildShareLink());
+    showToast(t(UI.copied));
+  });
+  document.getElementById('btn-email').addEventListener('click', () => {
+    const body = buildSummaryText() + '\n\n' + buildShareLink();
+    const url = 'mailto:' + encodeURIComponent(YOUR_EMAIL) +
+      '?subject=' + encodeURIComponent(t(UI.emailSubject)) +
+      '&body=' + encodeURIComponent(body);
+    window.location.href = url;
+  });
+  const waBtn = document.getElementById('btn-wa');
+  if (!YOUR_WHATSAPP) {
+    waBtn.style.display = 'none';
+  } else {
+    waBtn.addEventListener('click', () => {
+      const text = buildSummaryText() + '\n\n' + buildShareLink();
+      window.open('https://wa.me/' + YOUR_WHATSAPP + '?text=' + encodeURIComponent(text), '_blank');
+    });
+  }
 }
 
 function renderAll() {
@@ -105,6 +194,16 @@ function saveState() {
 
 function loadState() {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const urlPicks = params.get('picks');
+    const urlLang = params.get('lang');
+    if (urlPicks) {
+      // viewing a friend's shared link — don't merge with local storage
+      fromFriendMode = true;
+      urlPicks.split(',').filter(Boolean).forEach(id => picks.add(id));
+      if (urlLang === 'en' || urlLang === 'zh') lang = urlLang;
+      return;
+    }
     const savedPicks = JSON.parse(localStorage.getItem('sg-picks') || '[]');
     savedPicks.forEach(id => picks.add(id));
     const savedLang = localStorage.getItem('sg-lang');
@@ -124,5 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  setupShareButtons();
   renderAll();
+  if (fromFriendMode) switchTab('picks');
 });

@@ -2,7 +2,7 @@
 // Each text field has { zh, en } pair.
 
 const UI = {
-  title:      { zh: "嗨 ✨ 歡迎來 Saint-Genis", en: "Hi ✨ Welcome to Saint-Genis" },
+  title:      { zh: "感謝你來瑞士找我玩 ♡", en: "Thanks for coming to visit me in Switzerland ♡" },
   subtitle:   { zh: "挑幾個你想去的地方，我來安排", en: "Pick the places you want — I'll plan the rest" },
   tabDay:     { zh: "🌅 當天來回", en: "🌅 Day trips" },
   tabOvernight:{zh: "🌙 過夜行程", en: "🌙 Overnight trips" },
@@ -17,7 +17,16 @@ const UI = {
   tip:        { zh: "提醒", en: "Tip" },
   cost:       { zh: "費用", en: "Cost" },
   stay:       { zh: "建議住", en: "Suggested stay" },
-  hotels:     { zh: "住宿參考（2人/晚）", en: "Stays (for 2 / night)" }
+  hotels:     { zh: "住宿參考（2人/晚）", en: "Stays (for 2 / night)" },
+  sendTitle:  { zh: "把選擇送給 Ken", en: "Send your picks to Ken" },
+  sendHint:   { zh: "選好後挑一個方式傳給我，我就會準備驚喜 ✨", en: "When you're ready, pick a way to send me your list ✨" },
+  btnCopy:    { zh: "📋 複製文字", en: "📋 Copy text" },
+  btnLink:    { zh: "🔗 複製分享連結", en: "🔗 Copy share link" },
+  btnEmail:   { zh: "✉️ 用 Email 寄", en: "✉️ Send by Email" },
+  btnWa:      { zh: "💬 用 WhatsApp 傳", en: "💬 Send via WhatsApp" },
+  copied:     { zh: "已複製！", en: "Copied!" },
+  emailSubject:{zh: "我的 Saint-Genis 願望清單", en: "My Saint-Genis wishlist" },
+  fromFriendBanner:{zh: "✨ 你的朋友選了這些 ✨", en: "✨ Your friend picked these ✨" }
 };
 
 const DAY_SPOTS = [

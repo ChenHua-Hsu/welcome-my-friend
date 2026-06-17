@@ -252,6 +252,61 @@ main {
 
 #picks-empty { color: var(--muted); margin-top: 2rem; }
 
+.send-box {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.send-box h3 { margin-top: 0; }
+.send-hint { color: var(--muted); margin-bottom: 1rem; }
+
+.send-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.send-buttons button {
+  background: white;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.send-buttons button:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.toast {
+  min-height: 1.2rem;
+  margin-top: 0.8rem;
+  color: var(--accent);
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.toast.show { opacity: 1; }
+
+.from-friend {
+  background: linear-gradient(135deg, #fff5b1 0%, #ffd6d6 100%);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
 footer {
   text-align: center;
   padding: 2rem 1rem;
