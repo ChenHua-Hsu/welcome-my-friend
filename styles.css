@@ -349,11 +349,110 @@ main {
 }
 
 #picks-list {
+  display: block;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.trip-days-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0.5rem;
+  flex-wrap: wrap;
+}
+
+.trip-days-control label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.trip-days-control input {
+  width: 60px;
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.trip-days-control .multi-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.day-section {
+  margin-bottom: 2rem;
+  background: rgba(255,255,255,0.5);
+  border-radius: 16px;
+  padding: 1rem 1.25rem 1.25rem;
+  border: 1px solid var(--border);
+}
+
+.day-section.unassigned {
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+
+.day-header {
+  margin: 0 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+}
+
+.day-title { font-size: 1.15rem; color: var(--accent); }
+.day-summary { font-size: 0.85rem; color: var(--muted); font-weight: 400; }
+
+.day-items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1rem;
-  text-align: left;
-  margin-top: 1.5rem;
+}
+
+.day-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+}
+
+.day-chip-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-right: 0.3rem;
+}
+
+.day-chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink);
+  transition: all 0.12s;
+}
+
+.day-chip:hover { background: var(--accent-soft); }
+
+.day-chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: scale(1.05);
 }
 
 .pick-item {
@@ -486,4 +585,36 @@ footer {
   padding: 2rem 1rem;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.music-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-btn:hover { transform: scale(1.08); }
+
+.music-btn.playing {
+  background: var(--accent);
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(199,91,91,0.4); }
+  50%      { box-shadow: 0 4px 24px rgba(199,91,91,0.7); }
 }

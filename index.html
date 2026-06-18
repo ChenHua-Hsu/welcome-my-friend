@@ -45,6 +45,11 @@
   <section id="picks-section" class="picks hidden">
     <h2 data-i18n="picksTitle">你選的地方</h2>
     <div id="from-friend-banner" class="from-friend hidden"></div>
+    <div id="trip-days-control" class="trip-days-control hidden">
+      <label for="total-days-input" data-i18n="totalDays">總行程天數</label>
+      <input id="total-days-input" type="number" min="1" max="14" value="7">
+      <span class="multi-hint" data-i18n="multiHint">（過夜可複選）</span>
+    </div>
     <div id="picks-list"></div>
     <p id="picks-empty" data-i18n="picksEmpty">還沒選任何地方，去逛逛吧～</p>
     <div id="send-box" class="send-box hidden">
@@ -64,6 +69,9 @@
 <footer>
   <p data-i18n="footer">用愛 + GitHub Pages 製作 ♡</p>
 </footer>
+
+<button id="music-toggle" class="music-btn" aria-label="Toggle music" title="背景音樂">🎵</button>
+<audio id="bg-audio" src="music/bg.mp3" loop preload="none"></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="

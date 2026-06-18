@@ -1,6 +1,13 @@
 let lang = 'zh';
 let sortMode = 'score'; // 'score' or 'time'
+let totalDays = 7;
 const picks = new Set();
+const dayPlan = new Map(); // spotId -> Set<dayNumber>; absent = unassigned
+const MAX_DAYS = 14;
+
+function isOvernightSpot(id) {
+  return OVERNIGHT_SPOTS.some(s => s.id === id);
+}
 const YOUR_EMAIL = 'ken91021615@gmail.com';
 const YOUR_WHATSAPP = ''; // set to E.164 number without + e.g. "33612345678", or leave '' to hide
 let fromFriendMode = false;
@@ -137,6 +144,44 @@ function allSpotsForPicks() {
   return [...DAY_SPOTS, ...groups, ...OVERNIGHT_SPOTS];
 }
 
+function pickItemHtml(spot) {
+  const grouped = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
+  const isDay = DAY_SPOTS.find(d => d.id === spot.id) || grouped.find(g => g.id === spot.id);
+  const overnight = isOvernightSpot(spot.id);
+  const type = isDay
+    ? (lang === 'zh' ? '當天來回' : 'Day trip')
+    : (lang === 'zh' ? '過夜（可複選天數）' : 'Overnight (multi-day)');
+  const imgSrc = spot.image || (spot.wiki ? imageCache[spot.wiki] : null);
+  const imgHtml = imgSrc
+    ? `<div class="pick-img" style="background-image:url('${imgSrc}')"></div>`
+    : `<div class="pick-img empty"></div>`;
+  const currentSet = dayPlan.get(spot.id) || new Set();
+  const chips = [
+    `<button data-day="0" class="day-chip${currentSet.size === 0 ? ' active' : ''}">—</button>`
+  ];
+  for (let d = 1; d <= totalDays; d++) {
+    chips.push(`<button data-day="${d}" class="day-chip${currentSet.has(d) ? ' active' : ''}">${d}</button>`);
+  }
+  const chipsHtml = fromFriendMode
+    ? ''
+    : `<div class="day-chips" data-spot-id="${spot.id}" data-overnight="${overnight ? '1' : '0'}">
+         <span class="day-chip-label">${t(UI.setDayHint)}</span>${chips.join('')}
+       </div>`;
+  return `
+    ${imgHtml}
+    <div class="pick-text">
+      <h4>${t(spot.name)}</h4>
+      <small>${type}</small>
+      ${chipsHtml}
+    </div>`;
+}
+
+function formatMin(min) {
+  if (min < 60) return `${min}m`;
+  const h = Math.floor(min / 60), m = min % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
 function renderPicks() {
   const list = document.getElementById('picks-list');
   const empty = document.getElementById('picks-empty');
@@ -156,26 +201,85 @@ function renderPicks() {
   }
   empty.classList.add('hidden');
   sendBox.classList.toggle('hidden', fromFriendMode);
-  const groups = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
+
+  // Group by day. Each spot may appear in multiple days (overnight that spans).
+  // Travel time counted only on the earliest assigned day to avoid double-counting.
+  const byDay = new Map();
+  byDay.set(0, []);
+  for (let d = 1; d <= MAX_DAYS; d++) byDay.set(d, []);
   chosen.forEach(spot => {
-    const div = document.createElement('div');
-    div.className = 'pick-item';
-    const isDay = DAY_SPOTS.find(d => d.id === spot.id) || groups.find(g => g.id === spot.id);
-    const type = isDay
-      ? (lang === 'zh' ? '當天來回' : 'Day trip')
-      : (lang === 'zh' ? '過夜' : 'Overnight');
-    const imgSrc = spot.image || (spot.wiki ? imageCache[spot.wiki] : null);
-    const imgHtml = imgSrc
-      ? `<div class="pick-img" style="background-image:url('${imgSrc}')"></div>`
-      : `<div class="pick-img empty"></div>`;
-    div.innerHTML = `
-      ${imgHtml}
-      <div class="pick-text">
-        <h4>${t(spot.name)}</h4>
-        <small>${type}</small>
-      </div>`;
-    list.appendChild(div);
+    const set = dayPlan.get(spot.id);
+    if (!set || set.size === 0) {
+      byDay.get(0).push(spot);
+    } else {
+      const minDay = Math.min(...set);
+      set.forEach(d => {
+        if (!byDay.has(d)) byDay.set(d, []);
+        byDay.get(d).push({ spot, isArrivalDay: d === minDay });
+      });
+    }
   });
+
+  // Render day sections (skip empty days)
+  byDay.forEach((items, day) => {
+    if (items.length === 0) return;
+    const sec = document.createElement('div');
+    sec.className = 'day-section' + (day === 0 ? ' unassigned' : '');
+    // Count travel time only on arrival day (or always for unassigned/single-day)
+    const totalMin = items.reduce((sum, it) => {
+      const spot = it.spot || it;
+      const counts = (day === 0) || (it.isArrivalDay !== false);
+      return sum + (counts ? (spot.travelMin || 0) : 0);
+    }, 0);
+    const title = day === 0 ? t(UI.dayUnassigned) : `${t(UI.dayLabel)} ${day}`;
+    const summary = day === 0
+      ? `${items.length} ${t(UI.daySpots)}`
+      : `${items.length} ${t(UI.daySpots)} · ${t(UI.dayTravel)}${formatMin(totalMin)}`;
+    sec.innerHTML = `<h3 class="day-header"><span class="day-title">${title}</span><span class="day-summary">${summary}</span></h3>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'day-items';
+    items.forEach(it => {
+      const spot = it.spot || it;
+      const div = document.createElement('div');
+      div.className = 'pick-item';
+      div.innerHTML = pickItemHtml(spot);
+      wrap.appendChild(div);
+    });
+    sec.appendChild(wrap);
+    list.appendChild(sec);
+  });
+
+  // Wire up day chip clicks
+  list.querySelectorAll('.day-chips').forEach(group => {
+    const id = group.dataset.spotId;
+    const isOver = group.dataset.overnight === '1';
+    group.querySelectorAll('.day-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const d = parseInt(chip.dataset.day, 10);
+        let set = dayPlan.get(id);
+        if (d === 0) {
+          dayPlan.delete(id);
+        } else if (isOver) {
+          // multi-select toggle
+          if (!set) { set = new Set(); dayPlan.set(id, set); }
+          if (set.has(d)) set.delete(d);
+          else set.add(d);
+          if (set.size === 0) dayPlan.delete(id);
+        } else {
+          // single-select replace
+          dayPlan.set(id, new Set([d]));
+        }
+        saveState();
+        renderPicks();
+      });
+    });
+  });
+
+  // Show the total-days control
+  const tdc = document.getElementById('trip-days-control');
+  tdc.classList.toggle('hidden', fromFriendMode);
+  const tdi = document.getElementById('total-days-input');
+  tdi.value = totalDays;
 }
 
 function buildSummaryText() {
@@ -202,6 +306,9 @@ function buildShareLink() {
   const url = new URL(window.location.href);
   url.searchParams.set('picks', ids);
   url.searchParams.set('lang', lang);
+  const days = encodeDays();
+  if (days) url.searchParams.set('days', days);
+  else url.searchParams.delete('days');
   return url.toString();
 }
 
@@ -354,7 +461,30 @@ function saveState() {
     localStorage.setItem('sg-picks', JSON.stringify([...picks]));
     localStorage.setItem('sg-lang', lang);
     localStorage.setItem('sg-sort', sortMode);
+    const dayObj = {};
+    dayPlan.forEach((set, id) => { dayObj[id] = [...set]; });
+    localStorage.setItem('sg-days', JSON.stringify(dayObj));
+    localStorage.setItem('sg-totaldays', String(totalDays));
   } catch (e) {}
+}
+
+function encodeDays() {
+  // Format: "spotId:day1-day2-day3,spotId:day1"
+  return [...dayPlan.entries()]
+    .map(([id, set]) => `${id}:${[...set].sort((a, b) => a - b).join('-')}`)
+    .join(',');
+}
+
+function parseDays(str) {
+  if (!str) return;
+  str.split(',').filter(Boolean).forEach(pair => {
+    const [id, dStr] = pair.split(':');
+    if (!id || !dStr) return;
+    const days = dStr.split('-')
+      .map(s => parseInt(s, 10))
+      .filter(n => n >= 1 && n <= MAX_DAYS);
+    if (days.length) dayPlan.set(id, new Set(days));
+  });
 }
 
 function loadState() {
@@ -362,11 +492,13 @@ function loadState() {
     const params = new URLSearchParams(window.location.search);
     const urlPicks = params.get('picks');
     const urlLang = params.get('lang');
+    const urlDays = params.get('days');
     if (urlPicks) {
       // viewing a friend's shared link — don't merge with local storage
       fromFriendMode = true;
       urlPicks.split(',').filter(Boolean).forEach(id => picks.add(id));
       if (urlLang === 'en' || urlLang === 'zh') lang = urlLang;
+      parseDays(urlDays);
       return;
     }
     const savedPicks = JSON.parse(localStorage.getItem('sg-picks') || '[]');
@@ -375,6 +507,17 @@ function loadState() {
     if (savedLang === 'en' || savedLang === 'zh') lang = savedLang;
     const savedSort = localStorage.getItem('sg-sort');
     if (savedSort === 'score' || savedSort === 'time') sortMode = savedSort;
+    const savedDaysRaw = JSON.parse(localStorage.getItem('sg-days') || '{}');
+    if (Array.isArray(savedDaysRaw)) {
+      // legacy format: [[id, day], ...]
+      savedDaysRaw.forEach(([id, d]) => dayPlan.set(id, new Set([d])));
+    } else {
+      Object.entries(savedDaysRaw).forEach(([id, arr]) => {
+        if (Array.isArray(arr) && arr.length) dayPlan.set(id, new Set(arr));
+      });
+    }
+    const savedTotal = parseInt(localStorage.getItem('sg-totaldays') || '7', 10);
+    if (savedTotal >= 1 && savedTotal <= MAX_DAYS) totalDays = savedTotal;
   } catch (e) {}
 }
 
@@ -398,6 +541,51 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   setupShareButtons();
+  setupMusic();
+  const tdi = document.getElementById('total-days-input');
+  tdi.addEventListener('change', () => {
+    const n = parseInt(tdi.value, 10);
+    if (n >= 1 && n <= MAX_DAYS) {
+      totalDays = n;
+      saveState();
+      renderPicks();
+    } else {
+      tdi.value = totalDays;
+    }
+  });
   renderAll();
   if (fromFriendMode) switchTab('picks');
 });
+
+function setupMusic() {
+  const audio = document.getElementById('bg-audio');
+  const btn = document.getElementById('music-toggle');
+  audio.volume = 0.3;
+
+  const update = (playing) => {
+    btn.classList.toggle('playing', playing);
+    btn.textContent = playing ? '🔊' : '🎵';
+    btn.title = playing ? '靜音' : '播放背景音樂';
+  };
+
+  btn.addEventListener('click', () => {
+    if (audio.paused) {
+      audio.play().then(() => {
+        update(true);
+        localStorage.setItem('sg-music', '1');
+      }).catch(() => {
+        btn.textContent = '🎵';
+        btn.title = '找不到 music/bg.mp3 — 請放一個 MP3 進去';
+      });
+    } else {
+      audio.pause();
+      update(false);
+      localStorage.setItem('sg-music', '0');
+    }
+  });
+
+  // Try to autoplay if user previously enabled it (browsers may block on first visit)
+  if (localStorage.getItem('sg-music') === '1') {
+    audio.play().then(() => update(true)).catch(() => {});
+  }
+}

@@ -42,7 +42,14 @@ const UI = {
   staysBk:    { zh: "🔗 Booking", en: "🔗 Booking" },
   staysAg:    { zh: "🔗 Agoda", en: "🔗 Agoda" },
   staysSugg:  { zh: "幾個人氣選擇（在連結裡搜尋名字看價）",
-                en: "Popular picks (search by name in the link)" }
+                en: "Popular picks (search by name in the link)" },
+  dayUnassigned:{zh: "未分配", en: "Unassigned" },
+  dayLabel:     { zh: "Day", en: "Day" },
+  daySpots:     { zh: "個景點", en: "spots" },
+  dayTravel:    { zh: "交通約", en: "travel ~" },
+  setDayHint:   { zh: "分到", en: "Day" },
+  totalDays:    { zh: "總行程天數", en: "Total trip days" },
+  multiHint:    { zh: "（過夜可複選）", en: "(overnight = multi-select)" }
 };
 
 const DAY_SPOTS = [
@@ -523,6 +530,8 @@ const OVERNIGHT_SPOTS = [
     id: "jungfrau",
     wiki: "Jungfraujoch",
     score: 9.5,
+    tip: { zh: "從 Brienz 上來的話可搭遊船到 Interlaken，途中經過 Iseltwald（《愛的迫降》碼頭，下船 5 CHF）跟吉斯巴赫瀑布；目前船班 10:40 / 12:40 / 13:40。",
+           en: "From Brienz you can take the lake cruise to Interlaken — it passes Iseltwald (the Crash Landing on You pier, 5 CHF to disembark) and Giessbach Falls. Current departures: 10:40 / 12:40 / 13:40." },
     personalNote: { zh: "我六月底去完回來再補上心得！⛰",
                     en: "I'm going late June — will add my notes after! ⛰" },
     travelMin: 225,
@@ -547,6 +556,8 @@ const OVERNIGHT_SPOTS = [
     id: "zermatt",
     wiki: "Matterhorn",
     score: 9.3,
+    tip: { zh: "冰河列車（Glacier Express）西段 Andermatt → Zermatt 是直達的景觀路線，但要提早幾個月訂位（強制劃位費）；想省錢可改搭普通區域火車走同一條鐵軌，SBB App 在 Via 輸入 Andermatt 或 Disentis/Mustér 即可。",
+           en: "The Glacier Express western leg (Andermatt → Zermatt) is a panoramic ride — book seats months ahead (reservation required). To save money, take the regional train along the same tracks: in the SBB app put 'Andermatt' or 'Disentis/Mustér' as a Via point." },
     personalNote: { zh: "我六月底去完回來再補上心得！⛰",
                     en: "I'm going late June — will add my notes after! ⛰" },
     travelMin: 285,
@@ -571,6 +582,8 @@ const OVERNIGHT_SPOTS = [
     id: "lucerne",
     wiki: "Chapel Bridge",
     score: 7.9,
+    tip: { zh: "往 Interlaken 可走「黃金列車（Panoramic Express）」+ Brienz 湖遊船這條超美路線；列車約每小時一班，記得坐右側看湖景。",
+           en: "To Interlaken, take the iconic Golden Pass (Panoramic Express) + Brienz Lake cruise route. Trains run hourly — sit on the right side for the lake views." },
     travelMin: 215,
     name: { zh: "Lucerne 琉森", en: "Lucerne" },
     travel: { zh: "約 3 小時 35 分（公車 → Cornavin + 火車經 Bern / Olten 約 3h）",
