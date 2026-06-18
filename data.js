@@ -49,7 +49,12 @@ const UI = {
   dayTravel:    { zh: "交通約", en: "travel ~" },
   setDayHint:   { zh: "分到", en: "Day" },
   totalDays:    { zh: "總行程天數", en: "Total trip days" },
-  multiHint:    { zh: "（過夜可複選）", en: "(overnight = multi-select)" }
+  multiHint:    { zh: "（過夜可複選）", en: "(overnight = multi-select)" },
+  tabPacking:   { zh: "🎒 行李清單", en: "🎒 Packing List" },
+  packingTitle: { zh: "9 天打包清單", en: "9-day Packing List" },
+  packingSub:   { zh: "勾起來代表已準備（自動儲存）", en: "Check items as you pack (saved automatically)" },
+  packingProgress:{zh: "進度", en: "Progress" },
+  resetAll:     { zh: "重置全部", en: "Reset all" }
 };
 
 const DAY_SPOTS = [

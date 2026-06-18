@@ -23,6 +23,7 @@
   <button class="tab active" data-tab="day" data-i18n="tabDay">🌅 當天來回</button>
   <button class="tab" data-tab="overnight" data-i18n="tabOvernight">🌙 過夜行程</button>
   <button class="tab" data-tab="map" data-i18n="tabMap">🗺 地圖</button>
+  <button class="tab" data-tab="packing" data-i18n="tabPacking">🎒 行李清單</button>
   <button class="tab" data-tab="picks" data-i18n="tabPicks">💌 我的清單 <span id="pickCount" class="count">0</span></button>
 </nav>
 
@@ -34,6 +35,16 @@
   </div>
   <section id="day-section" class="cards"></section>
   <section id="overnight-section" class="cards hidden"></section>
+  <section id="packing-section" class="packing hidden">
+    <h2 data-i18n="packingTitle">9 天打包清單</h2>
+    <p class="packing-sub" data-i18n="packingSub">勾起來代表已準備（自動儲存）</p>
+    <div class="packing-progress-bar">
+      <div class="bar-track"><div id="packing-bar-fill" class="bar-fill"></div></div>
+      <span id="packing-progress-text"></span>
+      <button id="packing-reset" class="reset-btn" data-i18n="resetAll">重置全部</button>
+    </div>
+    <div id="packing-list"></div>
+  </section>
   <section id="map-section" class="hidden">
     <div class="map-legend">
       <span><span class="dot home"></span><span data-i18n="mapHome">家</span></span>
@@ -77,6 +88,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script>
 <script src="data.js"></script>
+<script src="packing.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -403,8 +403,90 @@ function switchTab(name) {
   document.getElementById('overnight-section').classList.toggle('hidden', name !== 'overnight');
   document.getElementById('picks-section').classList.toggle('hidden', name !== 'picks');
   document.getElementById('map-section').classList.toggle('hidden', name !== 'map');
-  document.getElementById('sort-bar').classList.toggle('hidden', name === 'picks' || name === 'map');
+  document.getElementById('packing-section').classList.toggle('hidden', name !== 'packing');
+  document.getElementById('sort-bar').classList.toggle('hidden',
+    name === 'picks' || name === 'map' || name === 'packing');
   if (name === 'map') ensureMap();
+  if (name === 'packing') renderPacking();
+}
+
+const packed = new Set();
+
+function loadPacking() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sg-packing') || '[]');
+    saved.forEach(id => packed.add(id));
+  } catch (e) {}
+}
+
+function savePacking() {
+  try { localStorage.setItem('sg-packing', JSON.stringify([...packed])); } catch (e) {}
+}
+
+function renderPacking() {
+  const root = document.getElementById('packing-list');
+  if (!root || typeof PACKING_CATEGORIES === 'undefined') return;
+  root.innerHTML = '';
+  let total = 0, done = 0;
+  PACKING_CATEGORIES.forEach(cat => {
+    const sec = document.createElement('div');
+    sec.className = 'packing-cat';
+    let catDone = 0;
+    const notesList = [];
+    const itemsHtml = cat.items.map(item => {
+      total++;
+      const checked = packed.has(item.id);
+      if (checked) { done++; catDone++; }
+      const hasNote = !!item.note;
+      const infoMark = hasNote
+        ? `<span class="pack-info" title="${t(item.note).replace(/"/g, '&quot;')}">ℹ️</span>`
+        : '';
+      if (hasNote) notesList.push({ name: t(item.name), note: t(item.note) });
+      return `<label class="pack-item ${checked ? 'checked' : ''}">
+        <input type="checkbox" data-item-id="${item.id}" ${checked ? 'checked' : ''}>
+        <span class="pack-name">${t(item.name)}</span>
+        ${infoMark}
+      </label>`;
+    }).join('');
+    const catNote = cat.note ? `<p class="pack-cat-note">${t(cat.note)}</p>` : '';
+    const notesHtml = notesList.length
+      ? `<div class="pack-notes-box">
+           <div class="pack-notes-title">ℹ️ ${lang === 'zh' ? '備註' : 'Notes'}</div>
+           ${notesList.map(n => `<div class="pack-note-row"><b>${n.name}</b>：<span>${n.note}</span></div>`).join('')}
+         </div>`
+      : '';
+    sec.innerHTML = `
+      <h3 class="pack-cat-title">${t(cat.title)} <small>${catDone}/${cat.items.length}</small></h3>
+      ${catNote}
+      <div class="pack-items">${itemsHtml}</div>
+      ${notesHtml}`;
+    root.appendChild(sec);
+  });
+  root.querySelectorAll('input[type=checkbox][data-item-id]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.dataset.itemId;
+      if (cb.checked) packed.add(id);
+      else packed.delete(id);
+      savePacking();
+      renderPacking();
+    });
+  });
+  // progress
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('packing-bar-fill').style.width = pct + '%';
+  document.getElementById('packing-progress-text').textContent =
+    `${t(UI.packingProgress)}: ${done} / ${total} (${pct}%)`;
+}
+
+function setupPacking() {
+  loadPacking();
+  document.getElementById('packing-reset').addEventListener('click', () => {
+    if (confirm(lang === 'zh' ? '確定要清掉所有勾選嗎？' : 'Clear all checked items?')) {
+      packed.clear();
+      savePacking();
+      renderPacking();
+    }
+  });
 }
 
 let _map = null;
@@ -542,6 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   setupShareButtons();
   setupMusic();
+  setupPacking();
   const tdi = document.getElementById('total-days-input');
   tdi.addEventListener('change', () => {
     const n = parseInt(tdi.value, 10);
