@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Where shall we go? · Saint-Genis Trip Picker</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin="">
 </head>
 <body>
 <header class="hero">
@@ -12,19 +15,33 @@
     <button data-lang="zh" class="active">中文</button>
     <button data-lang="en">English</button>
   </div>
-  <h1 data-i18n="title">嗨 ✨ 歡迎來 Saint-Genis</h1>
+  <h1 data-i18n="title">感謝你來瑞士找我玩 💖</h1>
   <p class="subtitle" data-i18n="subtitle">挑幾個你想去的地方，我來安排</p>
 </header>
 
 <nav class="tabs">
   <button class="tab active" data-tab="day" data-i18n="tabDay">🌅 當天來回</button>
   <button class="tab" data-tab="overnight" data-i18n="tabOvernight">🌙 過夜行程</button>
+  <button class="tab" data-tab="map" data-i18n="tabMap">🗺 地圖</button>
   <button class="tab" data-tab="picks" data-i18n="tabPicks">💌 我的清單 <span id="pickCount" class="count">0</span></button>
 </nav>
 
 <main>
+  <div id="sort-bar" class="sort-bar">
+    <span class="sort-label" data-i18n="sortBy">排序</span>
+    <button class="sort-btn active" data-sort="score" data-i18n="sortScore">分數 高→低</button>
+    <button class="sort-btn" data-sort="time" data-i18n="sortTime">交通時間 短→長</button>
+  </div>
   <section id="day-section" class="cards"></section>
   <section id="overnight-section" class="cards hidden"></section>
+  <section id="map-section" class="hidden">
+    <div class="map-legend">
+      <span><span class="dot home"></span><span data-i18n="mapHome">家</span></span>
+      <span><span class="dot day"></span><span data-i18n="mapDay">當天來回</span></span>
+      <span><span class="dot over"></span><span data-i18n="mapOver">過夜</span></span>
+    </div>
+    <div id="map"></div>
+  </section>
   <section id="picks-section" class="picks hidden">
     <h2 data-i18n="picksTitle">你選的地方</h2>
     <div id="from-friend-banner" class="from-friend hidden"></div>
@@ -48,6 +65,9 @@
   <p data-i18n="footer">用愛 + GitHub Pages 製作 ♡</p>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

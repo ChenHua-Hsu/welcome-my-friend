@@ -114,6 +114,55 @@ main {
 
 .hidden { display: none !important; }
 
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-right: 0.25rem;
+}
+
+.sort-btn {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+}
+
+.sort-btn:hover { background: var(--accent-soft); }
+
+.sort-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #fff5d6;
+  color: #b07a00;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.card h3 .score-badge { font-size: 0.8rem; }
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -124,11 +173,42 @@ main {
   background: var(--card);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
   transition: transform 0.15s, box-shadow 0.15s;
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 1.1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-img {
+  width: 100%;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  background-color: #eee2d4;
+  background-repeat: no-repeat;
+}
+
+.card-img.loading {
+  background-image: linear-gradient(90deg, #f0e4d4 0%, #f8efe2 50%, #f0e4d4 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.card-img.empty {
+  background: linear-gradient(135deg, #fce8e8 0%, #ffeede 100%);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .card:hover {
@@ -154,8 +234,18 @@ main {
 
 .card .desc {
   font-size: 0.95rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   flex: 1;
+}
+
+.personal-note {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-style: italic;
+  background: var(--accent-soft);
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  margin: 0.2rem 0 0.7rem;
 }
 
 .card .tag {
@@ -203,6 +293,32 @@ main {
 
 .hotel b { color: var(--ink); }
 
+.hotel-links {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.hotel-links a {
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.hotel-links a:hover { opacity: 0.85; }
+
+.hotel-sugg-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 0.3rem;
+}
+
 .select-btn {
   margin-top: 1rem;
   background: white;
@@ -242,15 +358,73 @@ main {
 
 .pick-item {
   background: var(--card);
-  padding: 1rem;
   border-radius: 12px;
   border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.pick-item h4 { margin: 0 0 0.3rem; }
+.pick-img {
+  width: 100%;
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  background-color: #eee2d4;
+}
+
+.pick-img.empty {
+  background: linear-gradient(135deg, #fce8e8 0%, #ffeede 100%);
+}
+
+.pick-text { padding: 0.8rem 1rem; }
+
+.pick-item h4 { margin: 0 0 0.25rem; }
 .pick-item small { color: var(--muted); }
 
 #picks-empty { color: var(--muted); margin-top: 2rem; }
+
+#map {
+  width: 100%;
+  height: 70vh;
+  min-height: 480px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.map-legend {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.map-legend .dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
+}
+
+.map-legend .dot.home { background: #f5b800; }
+.map-legend .dot.day  { background: #3b82f6; }
+.map-legend .dot.over { background: #c75b5b; }
+
+.leaflet-popup-content {
+  font-family: inherit;
+  margin: 0.6rem 0.8rem;
+}
+
+.leaflet-popup-content h4 { margin: 0 0 0.3rem; font-size: 1rem; }
+.leaflet-popup-content small { color: #888; }
+.leaflet-popup-content .pop-score { color: #b07a00; font-weight: 600; }
 
 .send-box {
   margin-top: 2.5rem;
