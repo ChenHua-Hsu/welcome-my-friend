@@ -80,7 +80,8 @@ const PACKING_CATEGORIES = [
       { id: "conditioner", name: { zh: "護髮素 / 髮油", en: "Conditioner / hair oil" } },
       { id: "hairpins", name: { zh: "髮圈 / 髮夾", en: "Hair ties / clips" } },
       { id: "cotton-pads", name: { zh: "化妝棉", en: "Cotton pads" } },
-      { id: "nail-clipper", name: { zh: "指甲剪（托運！）", en: "Nail clippers (CHECKED LUGGAGE!)" } }
+      { id: "nail-clipper", name: { zh: "指甲剪（托運！）", en: "Nail clippers (CHECKED LUGGAGE!)" } },
+      { id: "contacts", name: { zh: "隱形眼鏡（含備用 + 藥水）", en: "Contact lenses (extras + solution)" } }
     ]
   },
   {
