@@ -11,6 +11,7 @@ function isOvernightSpot(id) {
 const YOUR_EMAIL = 'ken91021615@gmail.com';
 const YOUR_WHATSAPP = ''; // set to E.164 number without + e.g. "33612345678", or leave '' to hide
 let fromFriendMode = false;
+let friendMessage = '';
 
 function sortSpots(spots) {
   const copy = spots.slice();
@@ -194,6 +195,24 @@ function renderPicks() {
   banner.classList.toggle('hidden', !fromFriendMode);
   if (fromFriendMode) banner.textContent = t(UI.fromFriendBanner);
 
+  // Message box / display
+  const msgBox = document.getElementById('message-box');
+  const msgDisplay = document.getElementById('friend-message-display');
+  if (fromFriendMode) {
+    msgBox.classList.add('hidden');
+    if (friendMessage) {
+      msgDisplay.classList.remove('hidden');
+      msgDisplay.innerHTML = `<div class="msg-title">${t(UI.msgFromFriend)}</div><div class="msg-body">${friendMessage.replace(/\n/g, '<br>')}</div>`;
+    } else {
+      msgDisplay.classList.add('hidden');
+    }
+  } else {
+    msgDisplay.classList.add('hidden');
+    msgBox.classList.remove('hidden');
+    const ta = document.getElementById('friend-message');
+    if (ta && ta.value !== friendMessage) ta.value = friendMessage;
+  }
+
   if (chosen.length === 0) {
     empty.classList.remove('hidden');
     sendBox.classList.add('hidden');
@@ -286,6 +305,9 @@ function buildSummaryText() {
   const groups = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
   const day = [...DAY_SPOTS, ...groups].filter(s => picks.has(s.id) && !s.hideInCard);
   const over = OVERNIGHT_SPOTS.filter(s => picks.has(s.id));
+  const msgBlock = friendMessage.trim()
+    ? `\n💌 ${lang === 'zh' ? '想對你說的話' : 'A note for you'}：\n${friendMessage.trim()}\n`
+    : '';
   const lines = [];
   lines.push(lang === 'zh' ? '我選的地方：' : 'My picks:');
   if (day.length) {
@@ -298,7 +320,7 @@ function buildSummaryText() {
     lines.push(lang === 'zh' ? '🌙 過夜' : '🌙 Overnight');
     over.forEach(s => lines.push('  - ' + t(s.name)));
   }
-  return lines.join('\n');
+  return lines.join('\n') + msgBlock;
 }
 
 function buildShareLink() {
@@ -309,6 +331,8 @@ function buildShareLink() {
   const days = encodeDays();
   if (days) url.searchParams.set('days', days);
   else url.searchParams.delete('days');
+  if (friendMessage.trim()) url.searchParams.set('msg', friendMessage.trim());
+  else url.searchParams.delete('msg');
   return url.toString();
 }
 
@@ -547,6 +571,7 @@ function saveState() {
     dayPlan.forEach((set, id) => { dayObj[id] = [...set]; });
     localStorage.setItem('sg-days', JSON.stringify(dayObj));
     localStorage.setItem('sg-totaldays', String(totalDays));
+    localStorage.setItem('sg-msg', friendMessage);
   } catch (e) {}
 }
 
@@ -581,6 +606,7 @@ function loadState() {
       urlPicks.split(',').filter(Boolean).forEach(id => picks.add(id));
       if (urlLang === 'en' || urlLang === 'zh') lang = urlLang;
       parseDays(urlDays);
+      friendMessage = params.get('msg') || '';
       return;
     }
     const savedPicks = JSON.parse(localStorage.getItem('sg-picks') || '[]');
@@ -600,6 +626,7 @@ function loadState() {
     }
     const savedTotal = parseInt(localStorage.getItem('sg-totaldays') || '7', 10);
     if (savedTotal >= 1 && savedTotal <= MAX_DAYS) totalDays = savedTotal;
+    friendMessage = localStorage.getItem('sg-msg') || '';
   } catch (e) {}
 }
 
@@ -625,6 +652,18 @@ document.addEventListener('DOMContentLoaded', () => {
   setupShareButtons();
   setupMusic();
   setupPacking();
+  const msgTa = document.getElementById('friend-message');
+  if (msgTa) {
+    msgTa.addEventListener('input', () => {
+      friendMessage = msgTa.value;
+      saveState();
+    });
+  }
+  // i18n placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (UI[key]) el.setAttribute('placeholder', t(UI[key]));
+  });
   const tdi = document.getElementById('total-days-input');
   tdi.addEventListener('change', () => {
     const n = parseInt(tdi.value, 10);

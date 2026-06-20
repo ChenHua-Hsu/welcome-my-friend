@@ -525,6 +525,60 @@ main {
 .leaflet-popup-content small { color: #888; }
 .leaflet-popup-content .pop-score { color: #b07a00; font-weight: 600; }
 
+.message-box {
+  margin-top: 2rem;
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+}
+
+.message-box label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+
+.message-box textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.message-box textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+}
+
+.friend-message-display {
+  background: linear-gradient(135deg, #fff5b1 0%, #ffd6d6 100%);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.friend-message-display .msg-title {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.friend-message-display .msg-body {
+  color: var(--ink);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
 .send-box {
   margin-top: 2.5rem;
   padding: 1.5rem;
