@@ -54,8 +54,8 @@ const UI = {
   msgLabel:     { zh: "💌 送給徐振華的話（選填）", en: "💌 A note to Chen-Hua (optional)" },
   msgPlaceholder:{zh: "可以寫下期待、想說的話、最興奮的景點… ✨",
                   en: "Share what you're excited about, anything you want to say… ✨" },
-  msgFromFriend:{zh: "💖 她留給你的話", en: "💖 Her note to you" },
-  packingTitle: { zh: "9 天打包清單", en: "9-day Packing List" },
+  msgFromFriend:{zh: "給振華的話", en: "A note to Chen-Hua" },
+  packingTitle: { zh: "打包清單", en: "Packing List" },
   packingSub:   { zh: "勾起來代表已準備（自動儲存）", en: "Check items as you pack (saved automatically)" },
   packingProgress:{zh: "進度", en: "Progress" },
   resetAll:     { zh: "重置全部", en: "Reset all" }
