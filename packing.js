@@ -42,6 +42,7 @@ const PACKING_CATEGORIES = [
       { id: "tops-long", name: { zh: "薄長袖上衣（高山降溫用）", en: "Light long-sleeve tops (for cool mountains)" } },
       { id: "pants", name: { zh: "長褲", en: "Long pants" } },
       { id: "shorts", name: { zh: "短褲 / 短裙", en: "Shorts / skirts" } },
+      { id: "long-skirt", name: { zh: "長裙", en: "Long skirt" } },
       { id: "dress", name: { zh: "好看衣服（若有需要）", en: "A nicer outfit (if needed)" } },
       { id: "underwear", name: { zh: "內衣褲", en: "Underwear" } },
       { id: "socks", name: { zh: "襪子", en: "Socks" } },
