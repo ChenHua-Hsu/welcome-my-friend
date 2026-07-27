@@ -5,8 +5,28 @@ const picks = new Set();
 const dayPlan = new Map(); // spotId -> Set<dayNumber>; absent = unassigned
 const MAX_DAYS = 14;
 
+// Custom spots: array of { id, name: string, note: string, loc: string, type: 'day'|'over' }
+let customSpots = [];
+// Custom packing: object { categoryId: [{ id, name: string }] }
+let customPacking = {};
+
+function isCustomSpot(id) {
+  return customSpots.some(s => s.id === id);
+}
 function isOvernightSpot(id) {
-  return OVERNIGHT_SPOTS.some(s => s.id === id);
+  if (OVERNIGHT_SPOTS.some(s => s.id === id)) return true;
+  const cs = customSpots.find(s => s.id === id);
+  return !!(cs && cs.type === 'over');
+}
+function customSpotAsSpot(cs) {
+  // Adapt custom-spot shape to look like a regular spot for shared rendering
+  return {
+    id: cs.id,
+    name: { zh: cs.name, en: cs.name },
+    desc: cs.note ? { zh: cs.note, en: cs.note } : undefined,
+    _custom: true,
+    _loc: cs.loc || ''
+  };
 }
 const YOUR_EMAIL = 'ken91021615@gmail.com';
 const YOUR_WHATSAPP = ''; // set to E.164 number without + e.g. "33612345678", or leave '' to hide
@@ -142,20 +162,34 @@ function renderCard(spot, isOvernight) {
 
 function allSpotsForPicks() {
   const groups = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
-  return [...DAY_SPOTS, ...groups, ...OVERNIGHT_SPOTS];
+  const custom = customSpots.map(customSpotAsSpot);
+  return [...DAY_SPOTS, ...groups, ...OVERNIGHT_SPOTS, ...custom];
 }
 
 function pickItemHtml(spot) {
   const grouped = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
-  const isDay = DAY_SPOTS.find(d => d.id === spot.id) || grouped.find(g => g.id === spot.id);
+  const custom = spot._custom;
   const overnight = isOvernightSpot(spot.id);
-  const type = isDay
-    ? (lang === 'zh' ? '當天來回' : 'Day trip')
-    : (lang === 'zh' ? '過夜（可複選天數）' : 'Overnight (multi-day)');
-  const imgSrc = spot.image || (spot.wiki ? imageCache[spot.wiki] : null);
-  const imgHtml = imgSrc
-    ? `<div class="pick-img" style="background-image:url('${imgSrc}')"></div>`
-    : `<div class="pick-img empty"></div>`;
+  const isDay = !custom && (DAY_SPOTS.find(d => d.id === spot.id) || grouped.find(g => g.id === spot.id));
+  let type;
+  if (custom) {
+    type = overnight
+      ? (lang === 'zh' ? '過夜（自己加的）' : 'Overnight (added by you)')
+      : (lang === 'zh' ? '當天來回（自己加的）' : 'Day trip (added by you)');
+  } else {
+    type = isDay
+      ? (lang === 'zh' ? '當天來回' : 'Day trip')
+      : (lang === 'zh' ? '過夜（可複選天數）' : 'Overnight (multi-day)');
+  }
+  let imgHtml;
+  if (custom) {
+    imgHtml = `<div class="pick-img custom-img">✨</div>`;
+  } else {
+    const imgSrc = spot.image || (spot.wiki ? imageCache[spot.wiki] : null);
+    imgHtml = imgSrc
+      ? `<div class="pick-img" style="background-image:url('${imgSrc}')"></div>`
+      : `<div class="pick-img empty"></div>`;
+  }
   const currentSet = dayPlan.get(spot.id) || new Set();
   const chips = [
     `<button data-day="0" class="day-chip${currentSet.size === 0 ? ' active' : ''}">—</button>`
@@ -168,13 +202,36 @@ function pickItemHtml(spot) {
     : `<div class="day-chips" data-spot-id="${spot.id}" data-overnight="${overnight ? '1' : '0'}">
          <span class="day-chip-label">${t(UI.setDayHint)}</span>${chips.join('')}
        </div>`;
+
+  const name = t(spot.name);
+  const nameHtml = (custom && spot._loc)
+    ? `<a class="custom-link" href="${customLocHref(spot._loc)}" target="_blank" rel="noopener noreferrer">${escapeHtml(name)} ↗</a>`
+    : escapeHtml(name);
+  const noteHtml = custom && spot.desc
+    ? `<p class="custom-note">${escapeHtml(t(spot.desc))}</p>`
+    : '';
+  const delBtn = (custom && !fromFriendMode)
+    ? `<button class="custom-del" data-del-id="${spot.id}" title="${t(UI.deleteCustom)}">✕</button>`
+    : '';
   return `
     ${imgHtml}
     <div class="pick-text">
-      <h4>${t(spot.name)}</h4>
+      <h4>${nameHtml}${delBtn}</h4>
       <small>${type}</small>
+      ${noteHtml}
       ${chipsHtml}
     </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+}
+
+function customLocHref(loc) {
+  if (/^https?:\/\//i.test(loc)) return loc;
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc);
 }
 
 function formatMin(min) {
@@ -194,6 +251,10 @@ function renderPicks() {
 
   banner.classList.toggle('hidden', !fromFriendMode);
   if (fromFriendMode) banner.textContent = t(UI.fromFriendBanner);
+
+  // Add-spot bar is always visible when not in friend mode (even with 0 picks)
+  const addBarEl = document.getElementById('add-spot-bar');
+  if (addBarEl) addBarEl.classList.toggle('hidden', fromFriendMode);
 
   // Message box / display
   const msgBox = document.getElementById('message-box');
@@ -268,6 +329,20 @@ function renderPicks() {
     list.appendChild(sec);
   });
 
+  // Wire up delete buttons for custom spots
+  list.querySelectorAll('.custom-del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.delId;
+      if (!confirm(t(UI.confirmDeleteSpot))) return;
+      customSpots = customSpots.filter(s => s.id !== id);
+      picks.delete(id);
+      dayPlan.delete(id);
+      saveState();
+      renderAll();
+    });
+  });
+
   // Wire up day chip clicks
   list.querySelectorAll('.day-chips').forEach(group => {
     const id = group.dataset.spotId;
@@ -305,6 +380,8 @@ function buildSummaryText() {
   const groups = (typeof DAY_GROUPS !== 'undefined') ? DAY_GROUPS : [];
   const day = [...DAY_SPOTS, ...groups].filter(s => picks.has(s.id) && !s.hideInCard);
   const over = OVERNIGHT_SPOTS.filter(s => picks.has(s.id));
+  const customDay = customSpots.filter(s => s.type !== 'over' && picks.has(s.id));
+  const customOver = customSpots.filter(s => s.type === 'over' && picks.has(s.id));
   const msgBlock = friendMessage.trim()
     ? `\n💌 ${lang === 'zh' ? '想對你說的話' : 'A note for you'}：\n${friendMessage.trim()}\n`
     : '';
@@ -320,7 +397,36 @@ function buildSummaryText() {
     lines.push(lang === 'zh' ? '🌙 過夜' : '🌙 Overnight');
     over.forEach(s => lines.push('  - ' + t(s.name)));
   }
+  if (customDay.length || customOver.length) {
+    lines.push('');
+    lines.push(t(UI.sharedCustomSpotsHead));
+    [...customDay, ...customOver].forEach(s => {
+      const tag = s.type === 'over'
+        ? (lang === 'zh' ? '（過夜）' : '(overnight)')
+        : (lang === 'zh' ? '（當天）' : '(day)');
+      let line = `  - ${s.name} ${tag}`;
+      if (s.note) line += ` — ${s.note}`;
+      if (s.loc) line += ` [${s.loc}]`;
+      lines.push(line);
+    });
+  }
+  const customPackList = flattenCustomPacking();
+  if (customPackList.length) {
+    lines.push('');
+    lines.push(t(UI.sharedCustomPackingHead));
+    customPackList.forEach(({ catId, name }) => {
+      lines.push(`  - ${name} (${catId})`);
+    });
+  }
   return lines.join('\n') + msgBlock;
+}
+
+function flattenCustomPacking() {
+  const out = [];
+  Object.entries(customPacking).forEach(([catId, items]) => {
+    (items || []).forEach(it => out.push({ catId, name: it.name }));
+  });
+  return out;
 }
 
 function buildShareLink() {
@@ -333,7 +439,23 @@ function buildShareLink() {
   else url.searchParams.delete('days');
   if (friendMessage.trim()) url.searchParams.set('msg', friendMessage.trim());
   else url.searchParams.delete('msg');
+  if (customSpots.length) url.searchParams.set('cs', b64encode(customSpots));
+  else url.searchParams.delete('cs');
+  const cpList = flattenCustomPacking();
+  if (cpList.length) url.searchParams.set('cp', b64encode(customPacking));
+  else url.searchParams.delete('cp');
   return url.toString();
+}
+
+function b64encode(obj) {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  } catch (e) { return ''; }
+}
+function b64decode(str) {
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(str))));
+  } catch (e) { return null; }
 }
 
 function showToast(msg) {
@@ -456,6 +578,7 @@ function renderPacking() {
     const sec = document.createElement('div');
     sec.className = 'packing-cat';
     let catDone = 0;
+    let catTotal = cat.items.length;
     const notesList = [];
     const itemsHtml = cat.items.map(item => {
       total++;
@@ -472,6 +595,19 @@ function renderPacking() {
         ${infoMark}
       </label>`;
     }).join('');
+
+    const customItems = customPacking[cat.id] || [];
+    const customItemsHtml = customItems.map(item => {
+      total++; catTotal++;
+      const checked = packed.has(item.id);
+      if (checked) { done++; catDone++; }
+      return `<label class="pack-item custom-pack-item ${checked ? 'checked' : ''}">
+        <input type="checkbox" data-item-id="${item.id}" ${checked ? 'checked' : ''}>
+        <span class="pack-name">${escapeHtml(item.name)}</span>
+        <button class="pack-del" data-pack-del-cat="${cat.id}" data-pack-del-id="${item.id}" title="${t(UI.deleteCustom)}">✕</button>
+      </label>`;
+    }).join('');
+
     const catNote = cat.note ? `<p class="pack-cat-note">${t(cat.note)}</p>` : '';
     const notesHtml = notesList.length
       ? `<div class="pack-notes-box">
@@ -479,10 +615,16 @@ function renderPacking() {
            ${notesList.map(n => `<div class="pack-note-row"><b>${n.name}</b>：<span>${n.note}</span></div>`).join('')}
          </div>`
       : '';
+    const addRow = fromFriendMode ? '' : `
+      <form class="pack-add-row" data-cat-id="${cat.id}">
+        <input type="text" class="pack-add-input" placeholder="${t(UI.addPackingPlaceholder)}">
+        <button type="submit" class="pack-add-btn">${t(UI.addPackingBtn)}</button>
+      </form>`;
     sec.innerHTML = `
-      <h3 class="pack-cat-title">${t(cat.title)} <small>${catDone}/${cat.items.length}</small></h3>
+      <h3 class="pack-cat-title">${t(cat.title)} <small>${catDone}/${catTotal}</small></h3>
       ${catNote}
-      <div class="pack-items">${itemsHtml}</div>
+      <div class="pack-items">${itemsHtml}${customItemsHtml}</div>
+      ${addRow}
       ${notesHtml}`;
     root.appendChild(sec);
   });
@@ -492,6 +634,35 @@ function renderPacking() {
       if (cb.checked) packed.add(id);
       else packed.delete(id);
       savePacking();
+      renderPacking();
+    });
+  });
+  root.querySelectorAll('.pack-del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const catId = btn.dataset.packDelCat;
+      const id = btn.dataset.packDelId;
+      customPacking[catId] = (customPacking[catId] || []).filter(it => it.id !== id);
+      if (!customPacking[catId].length) delete customPacking[catId];
+      packed.delete(id);
+      saveState();
+      savePacking();
+      renderPacking();
+    });
+  });
+  root.querySelectorAll('.pack-add-row').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const catId = form.dataset.catId;
+      const input = form.querySelector('.pack-add-input');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      const id = 'cust-' + catId + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+      if (!customPacking[catId]) customPacking[catId] = [];
+      customPacking[catId].push({ id, name });
+      input.value = '';
+      saveState();
       renderPacking();
     });
   });
@@ -572,6 +743,8 @@ function saveState() {
     localStorage.setItem('sg-days', JSON.stringify(dayObj));
     localStorage.setItem('sg-totaldays', String(totalDays));
     localStorage.setItem('sg-msg', friendMessage);
+    localStorage.setItem('sg-custom-spots', JSON.stringify(customSpots));
+    localStorage.setItem('sg-custom-packing', JSON.stringify(customPacking));
   } catch (e) {}
 }
 
@@ -607,6 +780,16 @@ function loadState() {
       if (urlLang === 'en' || urlLang === 'zh') lang = urlLang;
       parseDays(urlDays);
       friendMessage = params.get('msg') || '';
+      const csParam = params.get('cs');
+      if (csParam) {
+        const parsed = b64decode(csParam);
+        if (Array.isArray(parsed)) customSpots = parsed;
+      }
+      const cpParam = params.get('cp');
+      if (cpParam) {
+        const parsed = b64decode(cpParam);
+        if (parsed && typeof parsed === 'object') customPacking = parsed;
+      }
       return;
     }
     const savedPicks = JSON.parse(localStorage.getItem('sg-picks') || '[]');
@@ -627,6 +810,14 @@ function loadState() {
     const savedTotal = parseInt(localStorage.getItem('sg-totaldays') || '7', 10);
     if (savedTotal >= 1 && savedTotal <= MAX_DAYS) totalDays = savedTotal;
     friendMessage = localStorage.getItem('sg-msg') || '';
+    try {
+      const cs = JSON.parse(localStorage.getItem('sg-custom-spots') || '[]');
+      if (Array.isArray(cs)) customSpots = cs;
+    } catch (e) {}
+    try {
+      const cp = JSON.parse(localStorage.getItem('sg-custom-packing') || '{}');
+      if (cp && typeof cp === 'object') customPacking = cp;
+    } catch (e) {}
   } catch (e) {}
 }
 
@@ -675,9 +866,128 @@ document.addEventListener('DOMContentLoaded', () => {
       tdi.value = totalDays;
     }
   });
+  setupAddSpot();
+  setupExportImport();
   renderAll();
   if (fromFriendMode) switchTab('picks');
 });
+
+function setupAddSpot() {
+  const openBtn = document.getElementById('btn-add-spot');
+  const modal = document.getElementById('add-spot-modal');
+  if (!openBtn || !modal) return;
+  const nameInput = document.getElementById('spot-name-input');
+  const noteInput = document.getElementById('spot-note-input');
+  const locInput = document.getElementById('spot-loc-input');
+  const cancelBtn = document.getElementById('spot-cancel');
+  const saveBtn = document.getElementById('spot-save');
+
+  const open = () => {
+    nameInput.value = '';
+    noteInput.value = '';
+    locInput.value = '';
+    const dayRadio = modal.querySelector('input[name="spot-type"][value="day"]');
+    if (dayRadio) dayRadio.checked = true;
+    modal.classList.remove('hidden');
+    setTimeout(() => nameInput.focus(), 0);
+  };
+  const close = () => modal.classList.add('hidden');
+
+  openBtn.addEventListener('click', open);
+  cancelBtn.addEventListener('click', close);
+  modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+  });
+  saveBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    if (!name) { alert(t(UI.addSpotNameRequired)); nameInput.focus(); return; }
+    const typeInput = modal.querySelector('input[name="spot-type"]:checked');
+    const type = typeInput ? typeInput.value : 'day';
+    const id = 'custom-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    customSpots.push({
+      id,
+      name,
+      note: noteInput.value.trim(),
+      loc: locInput.value.trim(),
+      type
+    });
+    picks.add(id);
+    saveState();
+    close();
+    switchTab('picks');
+    renderAll();
+  });
+}
+
+function setupExportImport() {
+  const exportBtn = document.getElementById('btn-export');
+  const importBtn = document.getElementById('btn-import');
+  const fileInput = document.getElementById('import-file');
+  if (!exportBtn || !importBtn || !fileInput) return;
+
+  exportBtn.addEventListener('click', () => {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      picks: [...picks],
+      dayPlan: Object.fromEntries([...dayPlan.entries()].map(([id, set]) => [id, [...set]])),
+      totalDays,
+      lang,
+      sortMode,
+      friendMessage,
+      packed: [...packed],
+      customSpots,
+      customPacking
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `saint-genis-trip-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(t(UI.exportedMsg));
+  });
+
+  importBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        picks.clear();
+        (data.picks || []).forEach(id => picks.add(id));
+        dayPlan.clear();
+        Object.entries(data.dayPlan || {}).forEach(([id, arr]) => {
+          if (Array.isArray(arr) && arr.length) dayPlan.set(id, new Set(arr));
+        });
+        if (typeof data.totalDays === 'number') totalDays = data.totalDays;
+        if (data.lang === 'zh' || data.lang === 'en') lang = data.lang;
+        if (data.sortMode === 'score' || data.sortMode === 'time') sortMode = data.sortMode;
+        friendMessage = data.friendMessage || '';
+        packed.clear();
+        (data.packed || []).forEach(id => packed.add(id));
+        customSpots = Array.isArray(data.customSpots) ? data.customSpots : [];
+        customPacking = (data.customPacking && typeof data.customPacking === 'object') ? data.customPacking : {};
+        saveState();
+        savePacking();
+        renderAll();
+        showToast(t(UI.importedMsg));
+      } catch (e) {
+        showToast(t(UI.importFailed));
+      }
+      fileInput.value = '';
+    };
+    reader.onerror = () => { showToast(t(UI.importFailed)); fileInput.value = ''; };
+    reader.readAsText(file);
+  });
+}
 
 function setupMusic() {
   const audio = document.getElementById('bg-audio');

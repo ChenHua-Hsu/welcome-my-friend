@@ -58,7 +58,40 @@ const UI = {
   packingTitle: { zh: "打包清單", en: "Packing List" },
   packingSub:   { zh: "勾起來代表已準備（自動儲存）", en: "Check items as you pack (saved automatically)" },
   packingProgress:{zh: "進度", en: "Progress" },
-  resetAll:     { zh: "重置全部", en: "Reset all" }
+  resetAll:     { zh: "重置全部", en: "Reset all" },
+
+  // Custom spots
+  btnAddSpot:    { zh: "➕ 加自己想去的地方", en: "➕ Add my own spot" },
+  addSpotTitle:  { zh: "加一個想去的地方", en: "Add a place you want to go" },
+  addSpotName:   { zh: "地點名稱", en: "Place name" },
+  addSpotNote:   { zh: "備註 / 想幹嘛（選填）", en: "Note / what you want to do (optional)" },
+  addSpotLoc:    { zh: "地址或連結（選填，點名稱會打開）", en: "Address or link (optional, opens on click)" },
+  addSpotType:   { zh: "類型", en: "Type" },
+  addSpotTypeDay:{zh: "當天來回", en: "Day trip" },
+  addSpotTypeOver:{zh: "過夜", en: "Overnight" },
+  addSpotSave:   { zh: "加入", en: "Add" },
+  addSpotCancel: { zh: "取消", en: "Cancel" },
+  addSpotNamePlaceholder:{zh: "例如：Annecy 一日遊", en: "e.g. Annecy day trip" },
+  customBadge:   { zh: "自己加的", en: "Added by you" },
+  deleteCustom:  { zh: "刪除", en: "Delete" },
+  confirmDeleteSpot:{zh: "確定刪掉這個地點嗎？", en: "Delete this place?" },
+  addSpotNameRequired:{zh: "請輸入地點名稱", en: "Please enter a name" },
+
+  // Custom packing items
+  addPackingPlaceholder:{zh: "加物品…", en: "Add item…" },
+  addPackingBtn:  { zh: "＋", en: "＋" },
+
+  // Share text section headers
+  sharedCustomSpotsHead:{zh: "✨ 她自己加的地方", en: "✨ Places she added herself" },
+  sharedCustomPackingHead:{zh: "📦 她加的行李物品", en: "📦 Extra items she added" },
+
+  // Export / Import
+  exportBtn:     { zh: "📤 匯出我的清單", en: "📤 Export my list" },
+  importBtn:     { zh: "📥 從備份還原", en: "📥 Import backup" },
+  exportedMsg:   { zh: "已下載備份！", en: "Backup downloaded!" },
+  importedMsg:   { zh: "還原成功 ✓", en: "Restored ✓" },
+  importFailed:  { zh: "檔案讀不出來 😢", en: "Couldn't read that file 😢" },
+  backupHint:    { zh: "怕清單不見？下載一份備份留著。", en: "Worried about losing it? Save a backup." }
 };
 
 const DAY_SPOTS = [

@@ -61,6 +61,9 @@
       <input id="total-days-input" type="number" min="1" max="14" value="7">
       <span class="multi-hint" data-i18n="multiHint">（過夜可複選）</span>
     </div>
+    <div id="add-spot-bar" class="add-spot-bar hidden">
+      <button id="btn-add-spot" class="add-spot-btn" data-i18n="btnAddSpot">➕ 加自己想去的地方</button>
+    </div>
     <div id="picks-list"></div>
     <p id="picks-empty" data-i18n="picksEmpty">還沒選任何地方，去逛逛吧～</p>
     <div id="friend-message-display" class="friend-message-display hidden"></div>
@@ -78,10 +81,45 @@
         <button id="btn-email" data-i18n="btnEmail">✉️ 用 Email 寄</button>
         <button id="btn-wa"    data-i18n="btnWa">💬 用 WhatsApp 傳</button>
       </div>
+      <div class="backup-row">
+        <p class="backup-hint" data-i18n="backupHint">怕清單不見？下載一份備份留著。</p>
+        <div class="backup-buttons">
+          <button id="btn-export" data-i18n="exportBtn">📤 匯出我的清單</button>
+          <button id="btn-import" data-i18n="importBtn">📥 從備份還原</button>
+          <input id="import-file" type="file" accept="application/json" hidden>
+        </div>
+      </div>
       <p id="send-toast" class="toast"></p>
     </div>
   </section>
 </main>
+
+<div id="add-spot-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-body">
+    <h3 data-i18n="addSpotTitle">加一個想去的地方</h3>
+    <label>
+      <span data-i18n="addSpotName">地點名稱</span>
+      <input id="spot-name-input" type="text" data-i18n-placeholder="addSpotNamePlaceholder">
+    </label>
+    <label>
+      <span data-i18n="addSpotNote">備註（選填）</span>
+      <textarea id="spot-note-input" rows="2"></textarea>
+    </label>
+    <label>
+      <span data-i18n="addSpotLoc">地址或連結（選填）</span>
+      <input id="spot-loc-input" type="text" placeholder="https://... or Annecy, France">
+    </label>
+    <fieldset class="spot-type-field">
+      <legend data-i18n="addSpotType">類型</legend>
+      <label class="radio-inline"><input type="radio" name="spot-type" value="day" checked> <span data-i18n="addSpotTypeDay">當天來回</span></label>
+      <label class="radio-inline"><input type="radio" name="spot-type" value="over"> <span data-i18n="addSpotTypeOver">過夜</span></label>
+    </fieldset>
+    <div class="modal-buttons">
+      <button id="spot-cancel" class="btn-secondary" data-i18n="addSpotCancel">取消</button>
+      <button id="spot-save" class="btn-primary" data-i18n="addSpotSave">加入</button>
+    </div>
+  </div>
+</div>
 
 <footer>
   <p data-i18n="footer">用愛 + GitHub Pages 製作 ♡</p>
